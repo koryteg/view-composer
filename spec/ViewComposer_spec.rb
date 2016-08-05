@@ -111,19 +111,30 @@ describe BaseComposer do
 
   context "attributes inherited" do
     let(:model) { double("something", title: "a title", reddit: "a reddit", id: 123 ) }
-    it"inherited class needs to take the parent's attributes" do
-
+    before(:all) do
       class BaseThing < BaseComposer
         attributes :title, :reddit
       end
 
       class ChildThing1 < BaseThing
-
       end
 
-      composer = ChildThing1.new(model: model)
-      expect(composer.title).to eq("a title")
-      expect(composer.reddit).to eq("a reddit")
+      class ChildThing2 < BaseThing
+        attributes :id
+      end
+    end
+
+    it"inherited class needs to take the parent's attributes" do
+      composer1 = ChildThing1.new(model: model)
+      expect(composer1.title).to eq("a title")
+      expect(composer1.reddit).to eq("a reddit")
+    end
+
+    it 'combines both attributes in the api' do
+      composer2 = ChildThing2.new(model: model)
+      expect(composer2.title).to eq("a title")
+      expect(composer2.reddit).to eq("a reddit")
+      expect(composer2.id).to eq(123)
     end
   end
 end
