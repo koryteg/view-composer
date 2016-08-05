@@ -1,12 +1,16 @@
 require 'json'
 class BaseComposer
-  @attributes ||= []
+  class << self
+    attr_accessor :_attributes
+  end
+  self._attributes = []
+
   def initialize(model:, composable_objects: [] )
-    #self.class.attributes
     @model = model
-    @composer_methods = self.class.instance_methods(false)
     @json_hash = {}
-    set_attributes(self.class.get_attributes)
+    @composer_methods = self.class.instance_methods(false)
+    @_attrs = self.class._attributes
+    set_attributes
     setup_comp_objs(composable_objects)
     methods_to_hash
   end
@@ -19,28 +23,16 @@ class BaseComposer
     @json_hash.to_json
   end
 
-  def self.attributes(*attributes)
-    @attributes = attributes
-  end
-
-  def self.get_attributes
-    @attributes || []
+  def self.attributes(*attrs)
+    Array(attrs).each {|attr| self._attributes << attr}
   end
 
   def self.inherited(base)
     super
-    #puts "#{base}: #{get_attributes}"
+    base._attributes = self._attributes.dup
   end
 
 private
-
-  def define_methods(method_names, method_owner)
-    method_names.each do |attr|
-      self.class.send(:define_method, attr) do
-        method_owner.send(attr)
-      end
-    end
-  end
 
   def methods_to_hash
     methods = self.class.instance_methods(false) - [:to_json, :hash_attrs]
@@ -49,8 +41,8 @@ private
     end
   end
 
-  def set_attributes(attrs)
-    defineable_methods = attrs - @composer_methods
+  def set_attributes
+    defineable_methods = @_attrs - @composer_methods
     define_methods(defineable_methods, @model)
   end
 
@@ -59,6 +51,14 @@ private
       object_instance = obj.new(@model)
       define_methods(obj.instance_methods(false), object_instance)
       return object_instance
+    end
+  end
+
+  def define_methods(method_names, method_owner)
+    method_names.each do |attr|
+      self.class.send(:define_method, attr) do
+        method_owner.send(attr)
+      end
     end
   end
 
