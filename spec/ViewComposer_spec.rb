@@ -114,6 +114,10 @@ describe BaseComposer do
     before(:all) do
       class BaseThing < BaseComposer
         attributes :title, :reddit
+
+        def title
+          "#{@model.title} altered"
+        end
       end
 
       class ChildThing1 < BaseThing
@@ -126,13 +130,14 @@ describe BaseComposer do
 
     it"inherited class needs to take the parent's attributes" do
       composer1 = ChildThing1.new(model: model)
-      expect(composer1.title).to eq("a title")
+      expect(composer1.title).to eq("a title altered")
       expect(composer1.reddit).to eq("a reddit")
+      expect{composer1.id}.to raise_error(NoMethodError)
     end
 
     it 'combines both attributes in the api' do
       composer2 = ChildThing2.new(model: model)
-      expect(composer2.title).to eq("a title")
+      expect(composer2.title).to eq("a title altered")
       expect(composer2.reddit).to eq("a reddit")
       expect(composer2.id).to eq(123)
     end

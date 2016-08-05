@@ -8,7 +8,10 @@ class BaseComposer
   def initialize(model:, composable_objects: [] )
     @model = model
     @json_hash = {}
+
+    @parent_methods = self.class.superclass.instance_methods(false)
     @composer_methods = self.class.instance_methods(false)
+    @dont_redefine = @parent_methods + @composer_methods
     @_attrs = self.class._attributes
     set_attributes
     setup_comp_objs(composable_objects)
@@ -42,7 +45,8 @@ private
   end
 
   def set_attributes
-    defineable_methods = @_attrs - @composer_methods
+    defineable_methods = @_attrs - @dont_redefine
+    #puts "#{self}: #{defineable_methods}"
     define_methods(defineable_methods, @model)
   end
 
@@ -57,6 +61,7 @@ private
   def define_methods(method_names, method_owner)
     method_names.each do |attr|
       self.class.send(:define_method, attr) do
+        #puts method_owner.send(attr)
         method_owner.send(attr)
       end
     end
