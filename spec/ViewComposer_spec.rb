@@ -94,18 +94,46 @@ describe BaseComposer do
   end
 
   context '#to_json' do
-    let(:model) { double("something", title: "a title", reddit: "a reddit" ) }
 
-    it 'it turns stuff into json' do
-      class Thing < BaseComposer
-        attributes :title, :reddit
+    class JsonThing < BaseComposer
+      attributes :title, :reddit
+
+      def title
+        "asdf #{@model.title}"
       end
-      expect(Thing.new(model: model).to_json).to eq("{\"title\":\"a title\",\"reddit\":\"a reddit\"}")
+    end
+
+    class ChildJson < JsonThing
+      attributes :id
+
+      def id
+        "asdf #{@model.id}"
+      end
+    end
+
+    class Model
+      attr_accessor :id, :title, :reddit
     end
 
     it 'doesnt return stuff that is not defined in in the attributes api' do
       composer = BaseComposer.new(model: Object.new)
       expect(composer.to_json).to eq("{}")
+    end
+
+    it 'it turns stuff into json' do
+      asdf = Model.new
+      asdf.title = "a title"
+      asdf.reddit = "a reddit"
+
+      expect(JsonThing.new(model: asdf).to_json).to eq("{\"title\":\"asdf a title\",\"reddit\":\"a reddit\"}")
+    end
+
+    it "does nested metheds" do
+      model = double("thing333",
+                         id: 1234,
+                         title: "a title",
+                         reddit: "a reddit" )
+      expect(ChildJson.new(model: model).to_json).to eq("{\"title\":\"asdf a title\",\"reddit\":\"a reddit\",\"id\":\"asdf 1234\"}")
     end
   end
 

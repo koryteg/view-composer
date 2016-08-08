@@ -1,19 +1,20 @@
 require 'json'
+EXCLUDED_METHODS = [:to_json, :hash_attrs, :set_inherited_methods_list]
 class BaseComposer
   class << self
-    attr_accessor :_attributes
+    attr_accessor :_attributes, :_inherited_methods
   end
   self._attributes = []
+  self._inherited_methods = []
 
   def initialize(model:, composable_objects: [] )
+    set_inherited_methods_list
     @model = model
     @json_hash = {}
-
-    @parent_methods = self.class.superclass.instance_methods(false)
-    @composer_methods = self.class.instance_methods(false)
-    @dont_redefine = @parent_methods + @composer_methods
     @_attrs = self.class._attributes
-    set_attributes
+    @inherited_methods = self.class._inherited_methods
+    @instance_methods = self.class.instance_methods(false)
+    set_attributes_methods
     setup_comp_objs(composable_objects)
     methods_to_hash
   end
@@ -33,21 +34,34 @@ class BaseComposer
   def self.inherited(base)
     super
     base._attributes = self._attributes.dup
+    base._inherited_methods = self._inherited_methods.dup
   end
 
 private
 
+  def get_all_methods
+    (@_attrs + @inherited_methods + @instance_methods).uniq
+  end
+
+  def set_inherited_methods_list
+    _methods = self.class.superclass.instance_methods(false) - EXCLUDED_METHODS
+    self.class._inherited_methods += _methods
+  end
+
   def methods_to_hash
-    methods = self.class.instance_methods(false) - [:to_json, :hash_attrs]
+    methods = get_all_methods - EXCLUDED_METHODS
     methods.each do |method|
       @json_hash[method] = self.send(method)
     end
   end
 
-  def set_attributes
-    defineable_methods = @_attrs - @dont_redefine
-    #puts "#{self}: #{defineable_methods}"
-    define_methods(defineable_methods, @model)
+  def set_attributes_methods
+    define_methods(definable_methods, @model)
+  end
+
+  def definable_methods
+    m = @_attrs - @inherited_methods
+    m - @instance_methods
   end
 
   def setup_comp_objs(comp_objs_array)
@@ -61,7 +75,6 @@ private
   def define_methods(method_names, method_owner)
     method_names.each do |attr|
       self.class.send(:define_method, attr) do
-        #puts method_owner.send(attr)
         method_owner.send(attr)
       end
     end
