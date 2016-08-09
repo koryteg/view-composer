@@ -1,8 +1,18 @@
 require 'spec_helper'
 
+class PostModel
+  attr_accessor :id, :name, :title, :reddit
+
+  def initialize(attributes={})
+    attributes.each do |key, attr|
+      instance_variable_set("@#{key}", attr)
+    end
+  end
+end
+
 describe BaseComposer do
 	context ".new" do
-    let(:model) { double("model")}
+    let(:model) { PostModel.new }
     let(:invalid_composer) { BaseComposer.new }
     let(:valid_composer) { BaseComposer.new(model: model) }
 	  it "raise error without delegatee" do
@@ -14,7 +24,9 @@ describe BaseComposer do
 	end
 
   context '.attributes' do
-    let(:post) { double("Post.new", name: "a post", title: "a post title") }
+    let(:post) {
+      PostModel.new(name: "a post", title: "a post title")
+    }
 
     it "attributes looks for instance methods in the child class first" do
       class PostComposer < BaseComposer
@@ -54,7 +66,7 @@ describe BaseComposer do
 
   context "composed objects" do
 
-    let(:post) { double("Post.new 2", name: "a post", title: "a post title") }
+    let(:post) { PostModel.new(name: "a post", title: "a post title") }
     it "takes a composeable object and assigns its methods to the composer" do
       class Acomposer < BaseComposer
       end
@@ -80,7 +92,7 @@ describe BaseComposer do
   end
 
   context '#hash_attrs' do
-    let(:model) { double("something", title: "a title", reddit: "a reddit" ) }
+    let(:model) { PostModel.new(title: "a title", reddit: "a reddit" ) }
     it 'returns a hash of the attributes/methods' do
       class HashAttrs < BaseComposer
         attributes :title, :reddit
@@ -121,45 +133,51 @@ describe BaseComposer do
     end
 
     it 'it turns stuff into json' do
-      asdf = Model.new
-      asdf.title = "a title"
-      asdf.reddit = "a reddit"
+      model = PostModel.new(title: "a title", reddit: "a reddit")
 
-      expect(JsonThing.new(model: asdf).to_json).to eq("{\"title\":\"asdf a title\",\"reddit\":\"a reddit\"}")
+      expect(JsonThing.new(model: model).to_json).to eq("{\"title\":\"asdf a title\",\"reddit\":\"a reddit\"}")
     end
 
     it "does nested metheds" do
-      model = double("thing333",
-                         id: 1234,
-                         title: "title",
-                         reddit: "a reddit 2" )
+      model = PostModel.new(id: 1234, title: "title", reddit: "a reddit 2")
       expect(ChildJson.new(model: model).to_json).to eq("{\"title\":\"asdf title\",\"reddit\":\"a reddit 2\",\"id\":\"asdf 1234\"}")
+      model2 = PostModel.new(reddit: "a new reddit 3")
+      composer = ChildJson.new(model: model2)
+      expect(composer.reddit).to eq("a new reddit 3")
+      expect(composer.to_json).to include("a new reddit 3")
     end
   end
 
   context "attributes inherited" do
-    let(:model) { double("something",
+    let(:model2) { PostModel.new(
+                         title: '',
+                         reddit: '',
+                         id: 123 ) }
+
+    let(:model) { PostModel.new(
                          title: "a title",
                          reddit: "a reddit",
                          id: 123 ) }
-    before(:all) do
-      class BaseThing < BaseComposer
-        attributes :title, :reddit
 
-        def title
-          "#{@model.title} altered"
-        end
-      end
+    class BaseThing < BaseComposer
+      attributes :title, :reddit
 
-      class ChildThing1 < BaseThing
-      end
-
-      class ChildThing2 < BaseThing
-        attributes :id
+      def title
+        "#{@model.title} altered"
       end
     end
 
+    class ChildThing1 < BaseThing
+    end
+
+    class ChildThing2 < BaseThing
+      attributes :id
+    end
+
     it"inherited class needs to take the parent's attributes" do
+      base_composer1 = BaseThing.new(model: model2)
+      base_composer2 = BaseThing.new(model: model)
+
       composer1 = ChildThing1.new(model: model)
       expect(composer1.title).to eq("a title altered")
       expect(composer1.reddit).to eq("a reddit")

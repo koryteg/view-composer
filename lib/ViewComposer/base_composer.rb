@@ -12,6 +12,7 @@ class BaseComposer
     attr_accessor :_attributes,
                   :_instance_attrs,
                   :_model_methods,
+                  :_instance_defined_methods,
                   :_inherited_methods
   end
   self._attributes = []
@@ -24,6 +25,7 @@ class BaseComposer
     @model = model
     @json_hash = {}
     set_model_methods
+    set_instance_defined_methods
     set_attributes_methods
     setup_comp_objs(composable_objects)
     methods_to_hash
@@ -38,6 +40,7 @@ class BaseComposer
     super
     base._attributes = self._attributes.dup
     base._inherited_methods = self._inherited_methods.dup
+    base._model_methods = self._model_methods.dup
   end
 
   def hash_attrs
@@ -59,6 +62,14 @@ private
       self.class._model_methods = super_model_methods + new_model_methods
     else
       self.class._model_methods = new_model_methods
+    end
+  end
+
+  def set_instance_defined_methods
+    if self.class._instance_defined_methods != nil
+      self.class._instance_defined_methods += self.class._model_methods
+    else
+      self.class._instance_defined_methods = self.class._model_methods
     end
   end
 
@@ -104,7 +115,7 @@ private
   end
 
   def definable_methods
-    self.class._model_methods
+    self.class._instance_defined_methods + self.class._model_methods
   end
 
   def setup_comp_objs(comp_objs_array)
@@ -116,7 +127,7 @@ private
   end
 
   def define_methods(method_names, method_owner)
-    method_names.each do |attr|
+    method_names.uniq.each do |attr|
       self.class.send(:define_method, attr) do
         method_owner.send(attr)
       end
