@@ -1,22 +1,43 @@
 require 'json'
-EXCLUDED_METHODS = [:to_json, :hash_attrs, :set_inherited_methods_list]
+EXCLUDED_METHODS = [:to_json, :hash_attrs,
+                    :set_inherited_methods_list,
+                    :instance_methods,
+                    :inherited_methods,
+                    :attributes,
+                    :instance_attributes,
+                    :set_model_methods,
+                    :super_model_methods]
 class BaseComposer
   class << self
-    attr_accessor :_attributes, :_inherited_methods
+    attr_accessor :_attributes,
+                  :_instance_attrs,
+                  :_model_methods,
+                  :_inherited_methods
   end
   self._attributes = []
+  self._instance_attrs = []
   self._inherited_methods = []
+  self._model_methods = []
 
   def initialize(model:, composable_objects: [] )
     set_inherited_methods_list
     @model = model
     @json_hash = {}
-    @_attrs = self.class._attributes
-    @inherited_methods = self.class._inherited_methods
-    @instance_methods = self.class.instance_methods(false)
+    set_model_methods
     set_attributes_methods
     setup_comp_objs(composable_objects)
     methods_to_hash
+  end
+
+  def self.attributes(*attrs)
+    self._instance_attrs = attrs
+    Array(attrs).each {|attr| self._attributes << attr}
+  end
+
+  def self.inherited(base)
+    super
+    base._attributes = self._attributes.dup
+    base._inherited_methods = self._inherited_methods.dup
   end
 
   def hash_attrs
@@ -27,20 +48,43 @@ class BaseComposer
     @json_hash.to_json
   end
 
-  def self.attributes(*attrs)
-    Array(attrs).each {|attr| self._attributes << attr}
-  end
-
-  def self.inherited(base)
-    super
-    base._attributes = self._attributes.dup
-    base._inherited_methods = self._inherited_methods.dup
-  end
-
 private
 
+  def set_model_methods
+    new_model_methods = attributes - instance_methods
+    new_model_methods = new_model_methods - inherited_methods
+    new_model_methods = new_model_methods + super_model_methods
+
+    if self.class.superclass != Object
+      self.class._model_methods = super_model_methods + new_model_methods
+    else
+      self.class._model_methods = new_model_methods
+    end
+  end
+
+  def instance_attributes
+    @instance_attributes ||= self.class._instance_attrs || []
+  end
+
+  def super_model_methods
+    return [] if self.class.superclass === Object
+    @super_model ||= self.class.superclass._model_methods || []
+  end
+
+  def attributes
+    @attributes ||= self.class._attributes
+  end
+
+  def instance_methods
+    @instance_methods ||= self.class.instance_methods(false)
+  end
+
+  def inherited_methods
+    @inherted_methods ||= self.class._inherited_methods
+  end
+
   def get_all_methods
-    (@_attrs + @inherited_methods + @instance_methods).uniq
+    (attributes + inherited_methods + instance_methods).uniq
   end
 
   def set_inherited_methods_list
@@ -60,8 +104,7 @@ private
   end
 
   def definable_methods
-    m = @_attrs - @inherited_methods
-    m - @instance_methods
+    self.class._model_methods
   end
 
   def setup_comp_objs(comp_objs_array)
@@ -79,5 +122,4 @@ private
       end
     end
   end
-
 end

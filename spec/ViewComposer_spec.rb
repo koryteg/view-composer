@@ -131,14 +131,17 @@ describe BaseComposer do
     it "does nested metheds" do
       model = double("thing333",
                          id: 1234,
-                         title: "a title",
-                         reddit: "a reddit" )
-      expect(ChildJson.new(model: model).to_json).to eq("{\"title\":\"asdf a title\",\"reddit\":\"a reddit\",\"id\":\"asdf 1234\"}")
+                         title: "title",
+                         reddit: "a reddit 2" )
+      expect(ChildJson.new(model: model).to_json).to eq("{\"title\":\"asdf title\",\"reddit\":\"a reddit 2\",\"id\":\"asdf 1234\"}")
     end
   end
 
   context "attributes inherited" do
-    let(:model) { double("something", title: "a title", reddit: "a reddit", id: 123 ) }
+    let(:model) { double("something",
+                         title: "a title",
+                         reddit: "a reddit",
+                         id: 123 ) }
     before(:all) do
       class BaseThing < BaseComposer
         attributes :title, :reddit
