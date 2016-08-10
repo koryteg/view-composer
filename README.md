@@ -1,4 +1,4 @@
-# ViewComposer
+# ViewComposer [![Build Status](https://travis-ci.org/koryteg/view_composer.svg?branch=master)](https://travis-ci.org/koryteg/view_composer)
 
 ViewComposer makes it easy to compose view objects for ruby apps. Create new composers, pass them a model and classes to merge, and all instance methods of the classes will be available on the composer. The Composer will also serialize these instance methods into `json` for an API. I like to think of it as a mix between Draper and ActiveModel Serializer but built on ideas of composition from Sandi Metz.
 
