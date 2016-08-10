@@ -1,10 +1,10 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'ViewComposer/version'
+require 'view_composer/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "ViewComposer"
+  spec.name          = "view_composer"
   spec.version       = ViewComposer::VERSION
   spec.authors       = ["Kory Tegman"]
   spec.email         = ["korytegman@gmail.com"]
@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{View composer helps you compose objects and serialize
                           them. like a mix between AMS and Draper}
   spec.description   = %q{ view composer is a dynamic way to compose view objects}
-  spec.homepage      = "http://github.com/koryteg/view-composer"
+  spec.homepage      = "http://github.com/koryteg/view_composer"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
