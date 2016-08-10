@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Kory Tegman"]
   spec.email         = ["korytegman@gmail.com"]
 
-  spec.summary       = %q{View composer helps you compose objects and serialize
+  spec.summary       = %q{ViewComposer helps you compose objects and serialize
                           them. like a mix between AMS and Draper}
-  spec.description   = %q{ view composer is a dynamic way to compose view objects}
+  spec.description   = %q{ViewComposer is a dynamic way to compose view objects}
   spec.homepage      = "http://github.com/koryteg/view_composer"
   spec.license       = "MIT"
 

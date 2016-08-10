@@ -1,5 +1,5 @@
-require "View_composer/version"
-require "View_composer/base_composer"
+require "view_composer/version"
+require "view_composer/base_composer"
 require 'json'
 module ViewComposer
 end

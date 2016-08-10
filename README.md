@@ -1,8 +1,8 @@
 # ViewComposer
 
-View Composer makes it easy to compose view objects for ruby apps. Create new composers, pass them a model and classes to merge, and all instance methods of the classes will be available on the composer. The Composer will also serialize these instance methods into `json` for an api. I like to think of it as a mix between Draper and Active Model Serializer but built on ideas of composition from Sandi Metz.
+ViewComposer makes it easy to compose view objects for ruby apps. Create new composers, pass them a model and classes to merge, and all instance methods of the classes will be available on the composer. The Composer will also serialize these instance methods into `json` for an API. I like to think of it as a mix between Draper and ActiveModel Serializer but built on ideas of composition from Sandi Metz.
 
-This is still pre 1.0 software and the api will change.
+This is still pre-1.0 software and the API will change.
 
 ## Installation
 
@@ -22,14 +22,14 @@ Or install it yourself as:
 
 ## Usage
 
-create a new composer that inherits from `BaseComposer`. and use the attributes api (similar to active model serializer) to let your composer know what methods to respond to.
+create a new composer that inherits from `BaseComposer`. and use the attributes API (similar to ActiveModel::Serializer) to let your composer know what methods to respond to.
 
-``` ruby
-class PostComposer < BaseComposer
-    attributes :id, :name, :body
+```ruby
+class PostComposer < ViewComposer::BaseComposer
+  attributes :id, :name, :body
 end
 
-post_composer = PostCompser.new(model: Post.new(name: "a post") )
+post_composer = PostComposer.new(model: Post.new(name: "a post") )
 post_composer.name #=> "a post"
 post_composer.id #=> 1
 post_composer.hash_attrs #=> {id: 1, name: "a post", body: nil}
@@ -38,21 +38,23 @@ post_composer.to_json #=> "{\"id\":\"1\",\"name\":\"a post\", \"body\": \"\"}"
 
 if you would like to override the model's value you can define it as a method
 
-``` ruby
-class PostComposer < BaseComposer
-    attributes :id, :name, :body
-    
-    def name
-        "special super #{@model.name}"
-    end
+```ruby
+class PostComposer < ViewComposer::BaseComposer
+  attributes :id, :name, :body
+
+  def name
+    "special super #{@model.name}"
+  end
 end
+
 post_composer.name #=> special super a post
 ```
 
 the last part of this (that really makes it a composer) is that you can pass other classes to the composer and it will define those methods on the composer and serialize them into the same json object as well. Say you have `AdminStats` for your post that takes an instance of a post and responds to `total_reads` and `referrers`. ie: `AdminStats.new(post).total_reads` returns `1000`.
 
-your composer would look like this: 
-``` ruby
+your composer would look like this:
+
+```ruby
 post_composer = PostComposer.new(model: post, composable_objects: [AdminStats])
 post_composer.total_reads #=> 1000
 post_composer.referrers #=> ["bily", "bob", "jane"]
@@ -67,10 +69,8 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/ViewComposer. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/view_composer. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-

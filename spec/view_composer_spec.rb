@@ -10,16 +10,16 @@ class PostModel
   end
 end
 
-describe BaseComposer do
+describe ViewComposer::BaseComposer do
 	context ".new" do
     let(:model) { PostModel.new }
-    let(:invalid_composer) { BaseComposer.new }
-    let(:valid_composer) { BaseComposer.new(model: model) }
+    let(:invalid_composer) { ViewComposer::BaseComposer.new }
+    let(:valid_composer) { ViewComposer::BaseComposer.new(model: model) }
 	  it "raise error without delegatee" do
       expect{invalid_composer}.to raise_error(ArgumentError)
 	  end
 	  it "it initializes" do
-      expect(valid_composer).to be_a(BaseComposer)
+      expect(valid_composer).to be_a(ViewComposer::BaseComposer)
 	  end
 	end
 
@@ -29,7 +29,7 @@ describe BaseComposer do
     }
 
     it "attributes looks for instance methods in the child class first" do
-      class PostComposer < BaseComposer
+      class PostComposer < ViewComposer::BaseComposer
         attributes :name, :title
         def name
           "a post 2"
@@ -42,7 +42,7 @@ describe BaseComposer do
 
     it 'assigns attributes from model to composer' do
 
-      class PostComposer2 < BaseComposer
+      class PostComposer2 < ViewComposer::BaseComposer
         attributes :name, :title
       end
       post_composer = PostComposer2.new(model: post)
@@ -52,7 +52,7 @@ describe BaseComposer do
     end
 
     it 'uses model in method definition.' do
-      class PostComposer3 < BaseComposer
+      class PostComposer3 < ViewComposer::BaseComposer
         attributes :name, :title
         def name
           "#{@model.name} 3"
@@ -68,7 +68,7 @@ describe BaseComposer do
 
     let(:post) { PostModel.new(name: "a post", title: "a post title") }
     it "takes a composeable object and assigns its methods to the composer" do
-      class Acomposer < BaseComposer
+      class Acomposer < ViewComposer::BaseComposer
       end
       class AdminStats
         def initialize(model)
@@ -94,20 +94,20 @@ describe BaseComposer do
   context '#hash_attrs' do
     let(:model) { PostModel.new(title: "a title", reddit: "a reddit" ) }
     it 'returns a hash of the attributes/methods' do
-      class HashAttrs < BaseComposer
+      class HashAttrs < ViewComposer::BaseComposer
         attributes :title, :reddit
       end
       expect(HashAttrs.new(model: model).hash_attrs).to eq({title:"a title",reddit:"a reddit"})
     end
     it 'doesnt return data that is not defined in in the attributes api' do
-      composer = BaseComposer.new(model: Object.new)
+      composer = ViewComposer::BaseComposer.new(model: Object.new)
       expect(composer.hash_attrs).to eq({})
     end
   end
 
   context '#to_json' do
 
-    class JsonThing < BaseComposer
+    class JsonThing < ViewComposer::BaseComposer
       attributes :title, :reddit
 
       def title
@@ -128,7 +128,7 @@ describe BaseComposer do
     end
 
     it 'doesnt return stuff that is not defined in in the attributes api' do
-      composer = BaseComposer.new(model: Object.new)
+      composer = ViewComposer::BaseComposer.new(model: Object.new)
       expect(composer.to_json).to eq("{}")
     end
 
@@ -159,7 +159,7 @@ describe BaseComposer do
                          reddit: "a reddit",
                          id: 123 ) }
 
-    class BaseThing < BaseComposer
+    class BaseThing < ViewComposer::BaseComposer
       attributes :title, :reddit
 
       def title
