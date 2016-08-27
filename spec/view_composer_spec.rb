@@ -149,17 +149,17 @@ describe ViewComposer::BaseComposer do
   end
 
   context "attributes inherited" do
+    let(:model1) { PostModel.new(
+                         title: 'model1 title',
+                         reddit: 'model1 reddit',
+                         id: 123 ) }
+
     let(:model2) { PostModel.new(
-                         title: '',
-                         reddit: '',
-                         id: 123 ) }
+                         title: "model2 title",
+                         reddit: "model2 reddit",
+                         id: 456 ) }
 
-    let(:model) { PostModel.new(
-                         title: "a title",
-                         reddit: "a reddit",
-                         id: 123 ) }
-
-    class BaseThing < ViewComposer::BaseComposer
+    class ModelComposer < ViewComposer::BaseComposer
       attributes :title, :reddit
 
       def title
@@ -167,28 +167,34 @@ describe ViewComposer::BaseComposer do
       end
     end
 
-    class ChildThing1 < BaseThing
+    class ChildModelComposer1 < ModelComposer
     end
 
-    class ChildThing2 < BaseThing
+    class ChildModelComposer2 < ModelComposer
       attributes :id
     end
 
     it"inherited class needs to take the parent's attributes" do
-      base_composer1 = BaseThing.new(model: model2)
-      base_composer2 = BaseThing.new(model: model)
+      base_composer1 = ModelComposer.new(model: model1)
+      base_composer2 = ModelComposer.new(model: model2)
 
-      composer1 = ChildThing1.new(model: model)
-      expect(composer1.title).to eq("a title altered")
-      expect(composer1.reddit).to eq("a reddit")
+      composer1 = ChildModelComposer1.new(model: model1)
+      expect(composer1.title).to eq("#{model1.title} altered")
+      expect(composer1.reddit).to eq(model1.reddit)
       expect{composer1.id}.to raise_error(NoMethodError)
     end
 
     it 'combines both attributes in the api' do
-      composer2 = ChildThing2.new(model: model)
-      expect(composer2.title).to eq("a title altered")
-      expect(composer2.reddit).to eq("a reddit")
-      expect(composer2.id).to eq(123)
+      composer2 = ChildModelComposer2.new(model: model1)
+      composer3 = ChildModelComposer2.new(model: model2)
+
+      expect(composer2.title).to eq("#{model1.title} altered")
+      expect(composer2.reddit).to eq(model1.reddit)
+      expect(composer2.id).to eq(model1.id)
+
+      expect(composer3.title).to eq("#{model2.title} altered")
+      expect(composer3.reddit).to eq(model2.reddit)
+      expect(composer3.id).to eq(model2.id)
     end
   end
 end

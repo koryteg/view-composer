@@ -6,6 +6,8 @@ EXCLUDED_METHODS = [:to_json, :hash_attrs,
                     :attributes,
                     :instance_attributes,
                     :set_model_methods,
+                    :new_model_methods,
+                    :definable_model_methods,
                     :super_model_methods]
 module ViewComposer
   class BaseComposer
@@ -41,7 +43,7 @@ module ViewComposer
       super
       base._attributes = self._attributes.dup
       base._inherited_methods = self._inherited_methods.dup
-      base._model_methods = self._model_methods.dup
+      #base._model_methods = self._model_methods.dup
     end
 
     def hash_attrs
@@ -57,13 +59,8 @@ module ViewComposer
     def set_model_methods
       new_model_methods = attributes - instance_methods
       new_model_methods = new_model_methods - inherited_methods
-      new_model_methods = new_model_methods + super_model_methods
 
-      if self.class.superclass != Object
-        self.class._model_methods = super_model_methods + new_model_methods
-      else
-        self.class._model_methods = new_model_methods
-      end
+      set_model_methods_array(new_model_methods)
     end
 
     def set_instance_defined_methods
@@ -76,11 +73,6 @@ module ViewComposer
 
     def instance_attributes
       @instance_attributes ||= self.class._instance_attrs || []
-    end
-
-    def super_model_methods
-      return [] if self.class.superclass === Object
-      @super_model ||= self.class.superclass._model_methods || []
     end
 
     def attributes
@@ -111,12 +103,20 @@ module ViewComposer
       end
     end
 
-    def set_attributes_methods
-      define_methods(definable_methods, @model)
+    def definable_model_methods
+      []
     end
 
-    def definable_methods
-      self.class._instance_defined_methods + self.class._model_methods
+    def set_model_methods_array(new_model_methods)
+      asdf = definable_model_methods.dup
+      self.class.send(:define_method, "definable_model_methods") do
+        (asdf + new_model_methods).uniq
+      end
+    end
+
+    def set_attributes_methods
+      puts "#{self.class} definable_model_methods: #{definable_model_methods}"
+      define_methods(definable_model_methods, @model)
     end
 
     def setup_comp_objs(comp_objs_array)
@@ -129,6 +129,7 @@ module ViewComposer
 
     def define_methods(method_names, method_owner)
       method_names.uniq.each do |attr|
+        puts "#{attr} : #{method_owner.send(attr)}"
         self.class.send(:define_method, attr) do
           method_owner.send(attr)
         end
