@@ -1,26 +1,13 @@
 require 'json'
 EXCLUDED_METHODS = [:to_json, :hash_attrs,
-                    :set_inherited_methods_list,
-                    :instance_methods,
-                    :inherited_methods,
                     :attributes,
-                    :instance_attributes,
-                    :set_model_methods,
-                    :new_model_methods,
-                    :definable_model_methods,
-                    :super_model_methods]
+                    :definable_model_methods]
 module ViewComposer
   class BaseComposer
     class << self
-      attr_accessor :_attributes,
-      :_instance_attrs,
-      :_model_methods,
-      :_instance_defined_methods,
-      :_inherited_methods
+      attr_accessor :_attributes
     end
     self._attributes = []
-    self._instance_attrs = []
-    self._inherited_methods = []
 
     def initialize(model:, composable_objects: [] )
       @model = model
@@ -33,7 +20,6 @@ module ViewComposer
     end
 
     def self.attributes(*attrs)
-      self._instance_attrs = attrs
       Array(attrs).each {|attr| self._attributes << attr}
     end
 
