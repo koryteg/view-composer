@@ -21,14 +21,12 @@ module ViewComposer
     self._attributes = []
     self._instance_attrs = []
     self._inherited_methods = []
-    self._model_methods = []
 
     def initialize(model:, composable_objects: [] )
-      set_inherited_methods_list
       @model = model
       @json_hash = {}
+
       set_model_methods
-      set_instance_defined_methods
       set_attributes_methods
       setup_comp_objs(composable_objects)
       methods_to_hash
@@ -42,8 +40,6 @@ module ViewComposer
     def self.inherited(base)
       super
       base._attributes = self._attributes.dup
-      base._inherited_methods = self._inherited_methods.dup
-      #base._model_methods = self._model_methods.dup
     end
 
     def hash_attrs
@@ -57,22 +53,8 @@ module ViewComposer
     private
 
     def set_model_methods
-      new_model_methods = attributes - instance_methods
-      new_model_methods = new_model_methods - inherited_methods
-
+      new_model_methods = attributes - self.methods
       set_model_methods_array(new_model_methods)
-    end
-
-    def set_instance_defined_methods
-      if self.class._instance_defined_methods != nil
-        self.class._instance_defined_methods += self.class._model_methods
-      else
-        self.class._instance_defined_methods = self.class._model_methods
-      end
-    end
-
-    def instance_attributes
-      @instance_attributes ||= self.class._instance_attrs || []
     end
 
     def attributes
@@ -83,17 +65,8 @@ module ViewComposer
       @instance_methods ||= self.class.instance_methods(false)
     end
 
-    def inherited_methods
-      @inherted_methods ||= self.class._inherited_methods
-    end
-
     def get_all_methods
-      (attributes + inherited_methods + instance_methods).uniq
-    end
-
-    def set_inherited_methods_list
-      _methods = self.class.superclass.instance_methods(false) - EXCLUDED_METHODS
-      self.class._inherited_methods += _methods
+      (attributes + instance_methods).uniq
     end
 
     def methods_to_hash
@@ -108,14 +81,13 @@ module ViewComposer
     end
 
     def set_model_methods_array(new_model_methods)
-      asdf = definable_model_methods.dup
+      dup_of_methods = definable_model_methods.dup
       self.class.send(:define_method, "definable_model_methods") do
-        (asdf + new_model_methods).uniq
+        (dup_of_methods + new_model_methods).uniq
       end
     end
 
     def set_attributes_methods
-      puts "#{self.class} definable_model_methods: #{definable_model_methods}"
       define_methods(definable_model_methods, @model)
     end
 
@@ -129,8 +101,7 @@ module ViewComposer
 
     def define_methods(method_names, method_owner)
       method_names.uniq.each do |attr|
-        puts "#{attr} : #{method_owner.send(attr)}"
-        self.class.send(:define_method, attr) do
+        send(:define_singleton_method, attr) do
           method_owner.send(attr)
         end
       end
